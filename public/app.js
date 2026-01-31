@@ -159,23 +159,21 @@ async function fetchJSON(url) {
 
 let retryCount = 0;
 
+let cachedAgents = [];
+
 async function loadDashboard() {
   try {
-    const [hot, newPosts, rising, top, submolts, agents] = await Promise.all([
+    const [hot, newPosts, rising, top, submolts] = await Promise.all([
       fetchJSON('/api/posts?sort=hot&limit=25'),
       fetchJSON('/api/posts?sort=new&limit=25'),
       fetchJSON('/api/posts?sort=rising&limit=25'),
       fetchJSON('/api/posts?sort=top&limit=25'),
       fetchJSON('/api/submolts'),
-      fetchJSON('/api/agents/leaderboard'),
     ]);
 
     renderHotPosts(hot);
     renderNewPosts(newPosts);
     renderRising(rising);
-
-    const agentList = Array.isArray(agents) ? agents : [];
-    renderAgents(agentList);
 
     // Merge all posts for stats
     const seen = new Set();
@@ -191,7 +189,7 @@ async function loadDashboard() {
       });
     });
 
-    updateStats(allPosts, submolts, agentList);
+    updateStats(allPosts, submolts, cachedAgents);
     document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
     retryCount = 0;
   } catch (e) {
@@ -204,6 +202,17 @@ async function loadDashboard() {
       showToast('Failed to load data. Will retry on next refresh cycle.', true);
       retryCount = 0;
     }
+  }
+}
+
+// Load agents separately so it doesn't block the main dashboard
+async function loadAgents() {
+  try {
+    const agents = await fetchJSON('/api/agents/leaderboard');
+    cachedAgents = Array.isArray(agents) ? agents : [];
+    renderAgents(cachedAgents);
+  } catch (e) {
+    console.error('Agents load error:', e);
   }
 }
 
@@ -251,6 +260,8 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 
 // Initial load
 loadDashboard();
+loadAgents();
 
-// Auto-refresh every 60 seconds
+// Auto-refresh every 60 seconds, agents every 2 minutes
 setInterval(loadDashboard, 60000);
+setInterval(loadAgents, 120000);
