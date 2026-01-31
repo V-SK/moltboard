@@ -122,13 +122,13 @@ function renderAgents(agents) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#555">No data</td></tr>';
     return;
   }
-  tbody.innerHTML = agents.slice(0, 15).map((a, i) => `
+  tbody.innerHTML = agents.slice(0, 15).map(a => `
     <tr>
-      <td class="col-rank">${i + 1}</td>
+      <td class="col-rank">${a.rank || '—'}</td>
       <td><span class="author">${esc(a.name)}</span></td>
       <td class="upvote">${formatNum(a.karma)}</td>
-      <td>${formatNum(a.followers)}</td>
-      <td>${a.posts}</td>
+      <td>${a.is_claimed ? '✓' : '—'}</td>
+      <td>${a.x_handle ? `<a href="https://x.com/${esc(a.x_handle)}" target="_blank" rel="noopener">@${esc(a.x_handle)}</a>` : '—'}</td>
     </tr>
   `).join('');
 }

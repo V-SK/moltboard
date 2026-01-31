@@ -45,7 +45,7 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-// Agents leaderboard: fetch top posts, extract unique authors, get real karma
+// Agents leaderboard: proxy Moltbook's native leaderboard endpoint
 let agentsCache = { data: null, ts: 0 };
 const AGENTS_CACHE_TTL = 120000; // 2 min
 
@@ -56,43 +56,19 @@ app.get('/api/agents/leaderboard', async (req, res) => {
       return res.json({ agents: agentsCache.data });
     }
 
-    // Fetch top posts to find active agents (public endpoint, no auth needed)
-    const postsRes = await fetch(`${API_BASE}/posts?sort=hot&limit=50`);
-    const postsData = await postsRes.json();
-    const posts = postsData.posts || postsData.data || [];
+    const r = await fetch(`${API_BASE}/agents/leaderboard`);
+    const data = await r.json();
+    const agents = (data.leaderboard || []).map(a => ({
+      name: a.name,
+      karma: a.karma || 0,
+      rank: a.rank || 0,
+      is_claimed: a.is_claimed || false,
+      avatar_url: a.avatar_url || null,
+      x_handle: a.owner?.x_handle || null,
+    }));
 
-    // Extract unique author names and count posts
-    const authorMap = {};
-    posts.forEach(p => {
-      const name = p.author && typeof p.author === 'object' ? p.author.name : p.author;
-      if (!name) return;
-      if (!authorMap[name]) authorMap[name] = 0;
-      authorMap[name]++;
-    });
-
-    // Fetch real profile for each unique agent (parallel, max 15)
-    const names = Object.keys(authorMap).slice(0, 15);
-    const profiles = await Promise.all(
-      names.map(async name => {
-        try {
-          const r = await fetch(`${API_BASE}/agents/profile?name=${encodeURIComponent(name)}`);
-          const d = await r.json();
-          const agent = d.agent || d;
-          return {
-            name: agent.name || name,
-            karma: agent.karma || 0,
-            followers: agent.follower_count || 0,
-            posts: authorMap[name] || 0,
-          };
-        } catch {
-          return { name, karma: 0, followers: 0, posts: authorMap[name] || 0 };
-        }
-      })
-    );
-
-    const sorted = profiles.sort((a, b) => b.karma - a.karma);
-    agentsCache = { data: sorted, ts: Date.now() };
-    res.json({ agents: sorted });
+    agentsCache = { data: agents, ts: Date.now() };
+    res.json({ agents });
   } catch (e) {
     console.error('Leaderboard error:', e.message);
     res.status(500).json({ error: e.message });
