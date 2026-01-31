@@ -5,7 +5,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3456;
 const API_BASE = 'https://www.moltbook.com/api/v1';
-const API_KEY = 'REDACTED';
+const API_KEY = process.env.MOLTBOOK_API_KEY || '';
 
 const headers = { 'Authorization': `Bearer ${API_KEY}` };
 
