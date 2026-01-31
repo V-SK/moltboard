@@ -21,6 +21,20 @@ function esc(s) {
   return d.innerHTML;
 }
 
+function authorName(p) {
+  if (p.author && typeof p.author === 'object') return p.author.name || '—';
+  return p.author || p.authorName || p.agent || '—';
+}
+
+function submoltName(p) {
+  if (p.submolt && typeof p.submolt === 'object') return p.submolt.display_name || p.submolt.name || '—';
+  return p.submolt || p.submoltName || '—';
+}
+
+function commentCount(p) {
+  return p.comment_count ?? p.commentCount ?? p.comments ?? 0;
+}
+
 function postTitle(p) {
   const title = esc(p.title || '(untitled)');
   const url = p.url || `https://www.moltbook.com/post/${p.id || p._id || ''}`;
@@ -37,10 +51,10 @@ function renderHotPosts(posts) {
     <tr>
       <td>${i + 1}</td>
       <td class="title-cell">${postTitle(p)}</td>
-      <td><span class="author">${esc(p.author || p.authorName || p.agent || '—')}</span></td>
+      <td><span class="author">${esc(authorName(p))}</span></td>
       <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
-      <td class="comment">${p.commentCount ?? p.comments ?? 0}</td>
-      <td><span class="submolt-tag">${esc(p.submolt || p.submoltName || '—')}</span></td>
+      <td class="comment">${commentCount(p)}</td>
+      <td><span class="submolt-tag">${esc(submoltName(p))}</span></td>
     </tr>
   `).join('');
 }
@@ -54,10 +68,10 @@ function renderNewPosts(posts) {
   tbody.innerHTML = posts.slice(0, 20).map(p => `
     <tr>
       <td class="title-cell">${postTitle(p)}</td>
-      <td><span class="author">${esc(p.author || p.authorName || p.agent || '—')}</span></td>
+      <td><span class="author">${esc(authorName(p))}</span></td>
       <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
-      <td class="comment">${p.commentCount ?? p.comments ?? 0}</td>
-      <td><span class="submolt-tag">${esc(p.submolt || p.submoltName || '—')}</span></td>
+      <td class="comment">${commentCount(p)}</td>
+      <td><span class="submolt-tag">${esc(submoltName(p))}</span></td>
       <td class="time-ago">${timeAgo(p.createdAt || p.created_at || p.date)}</td>
     </tr>
   `).join('');
@@ -73,7 +87,7 @@ function renderRising(posts) {
     <tr>
       <td>${i + 1}</td>
       <td class="title-cell">${postTitle(p)}</td>
-      <td><span class="author">${esc(p.author || p.authorName || p.agent || '—')}</span></td>
+      <td><span class="author">${esc(authorName(p))}</span></td>
       <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
     </tr>
   `).join('');
@@ -82,8 +96,8 @@ function renderRising(posts) {
 function extractAgents(allPosts) {
   const map = {};
   allPosts.forEach(p => {
-    const name = p.author || p.authorName || p.agent;
-    if (!name) return;
+    const name = authorName(p);
+    if (!name || name === '—') return;
     if (!map[name]) map[name] = { name, posts: 0, upvotes: 0 };
     map[name].posts++;
     map[name].upvotes += (p.upvotes ?? p.score ?? 0);
@@ -189,10 +203,10 @@ async function doSearch() {
     <tbody>${arr.map(p => `
       <tr>
         <td class="title-cell">${postTitle(p)}</td>
-        <td><span class="author">${esc(p.author || p.authorName || p.agent || '—')}</span></td>
+        <td><span class="author">${esc(authorName(p))}</span></td>
         <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
-        <td class="comment">${p.commentCount ?? p.comments ?? 0}</td>
-        <td><span class="submolt-tag">${esc(p.submolt || p.submoltName || '—')}</span></td>
+        <td class="comment">${commentCount(p)}</td>
+        <td><span class="submolt-tag">${esc(submoltName(p))}</span></td>
       </tr>
     `).join('')}</tbody>
   </table>`;
