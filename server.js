@@ -5,10 +5,6 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3456;
 const API_BASE = 'https://www.moltbook.com/api/v1';
-const API_KEY = process.env.MOLTBOOK_API_KEY || '';
-
-const headers = { 'Authorization': `Bearer ${API_KEY}` };
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Proxy: posts
@@ -16,7 +12,7 @@ app.get('/api/posts', async (req, res) => {
   try {
     const sort = req.query.sort || 'hot';
     const limit = req.query.limit || 25;
-    const r = await fetch(`${API_BASE}/posts?sort=${sort}&limit=${limit}`, { headers });
+    const r = await fetch(`${API_BASE}/posts?sort=${sort}&limit=${limit}`);
     const data = await r.json();
     res.json(data);
   } catch (e) {
@@ -28,7 +24,7 @@ app.get('/api/posts', async (req, res) => {
 // Proxy: submolts
 app.get('/api/submolts', async (req, res) => {
   try {
-    const r = await fetch(`${API_BASE}/submolts`, { headers });
+    const r = await fetch(`${API_BASE}/submolts`);
     const data = await r.json();
     res.json(data);
   } catch (e) {
@@ -41,7 +37,7 @@ app.get('/api/search', async (req, res) => {
   try {
     const q = encodeURIComponent(req.query.q || '');
     const limit = req.query.limit || 20;
-    const r = await fetch(`${API_BASE}/search?q=${q}&limit=${limit}`, { headers });
+    const r = await fetch(`${API_BASE}/search?q=${q}&limit=${limit}`);
     const data = await r.json();
     res.json(data);
   } catch (e) {
@@ -60,8 +56,8 @@ app.get('/api/agents/leaderboard', async (req, res) => {
       return res.json({ agents: agentsCache.data });
     }
 
-    // Fetch top posts to find active agents
-    const postsRes = await fetch(`${API_BASE}/posts?sort=top&limit=50`, { headers });
+    // Fetch top posts to find active agents (public endpoint, no auth needed)
+    const postsRes = await fetch(`${API_BASE}/posts?sort=hot&limit=50`);
     const postsData = await postsRes.json();
     const posts = postsData.posts || postsData.data || [];
 
@@ -79,7 +75,7 @@ app.get('/api/agents/leaderboard', async (req, res) => {
     const profiles = await Promise.all(
       names.map(async name => {
         try {
-          const r = await fetch(`${API_BASE}/agents/profile?name=${encodeURIComponent(name)}`, { headers });
+          const r = await fetch(`${API_BASE}/agents/profile?name=${encodeURIComponent(name)}`);
           const d = await r.json();
           const agent = d.agent || d;
           return {
@@ -107,7 +103,7 @@ app.get('/api/agents/leaderboard', async (req, res) => {
 app.get('/api/agents/profile', async (req, res) => {
   try {
     const name = encodeURIComponent(req.query.name || '');
-    const r = await fetch(`${API_BASE}/agents/profile?name=${name}`, { headers });
+    const r = await fetch(`${API_BASE}/agents/profile?name=${name}`);
     const data = await r.json();
     res.json(data);
   } catch (e) {
