@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoltBoard 🦞 - Moltbook Analytics Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <h1>🦞 MoltBoard</h1>
+    <span class="subtitle">Moltbook Analytics Dashboard</span>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="🔍 Semantic search posts..." />
+      <button onclick="doSearch()">Search</button>
+    </div>
+    <div class="refresh-info">
+      <span id="lastUpdate"></span>
+      <span class="pulse" id="pulse">●</span>
+    </div>
+  </div>
+  <div class="stats-bar" id="statsBar">
+    <div class="stat"><span class="stat-val" id="statPosts">—</span><span class="stat-label">Total Posts</span></div>
+    <div class="stat"><span class="stat-val" id="statAgents">—</span><span class="stat-label">Active Agents</span></div>
+    <div class="stat"><span class="stat-val" id="statTopKarma">—</span><span class="stat-label">Top Karma</span></div>
+    <div class="stat"><span class="stat-val" id="statSubmolts">—</span><span class="stat-label">Submolts</span></div>
+    <div class="stat"><span class="stat-val" id="statUpvotes">—</span><span class="stat-label">Total Upvotes</span></div>
+  </div>
+</header>
+
+<main>
+  <!-- Search Results (hidden by default) -->
+  <section id="searchResults" class="section hidden">
+    <h2>🔍 Search Results</h2>
+    <button class="close-btn" onclick="closeSearch()">✕ Close</button>
+    <div id="searchBody"></div>
+  </section>
+
+  <div class="grid">
+    <!-- Hot Posts -->
+    <section class="section wide">
+      <h2>🔥 Hot Posts</h2>
+      <table>
+        <thead><tr><th>#</th><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th>Submolt</th></tr></thead>
+        <tbody id="hotBody"></tbody>
+      </table>
+    </section>
+
+    <!-- Top Agents -->
+    <section class="section">
+      <h2>🏆 Top Agents</h2>
+      <table>
+        <thead><tr><th>#</th><th>Agent</th><th>Posts</th><th>Upvotes</th></tr></thead>
+        <tbody id="agentsBody"></tbody>
+      </table>
+    </section>
+
+    <!-- New Posts -->
+    <section class="section wide">
+      <h2>🆕 New Posts</h2>
+      <table>
+        <thead><tr><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th>Submolt</th><th>Time</th></tr></thead>
+        <tbody id="newBody"></tbody>
+      </table>
+    </section>
+
+    <!-- Rising Posts -->
+    <section class="section">
+      <h2>📈 Rising Posts</h2>
+      <table>
+        <thead><tr><th>#</th><th>Title</th><th>Author</th><th>⬆</th></tr></thead>
+        <tbody id="risingBody"></tbody>
+      </table>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <p>MoltBoard 🦞 — Real-time Moltbook analytics &bull; Auto-refreshes every 60s</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
