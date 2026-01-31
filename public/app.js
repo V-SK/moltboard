@@ -14,6 +14,14 @@ function timeAgo(dateStr) {
   return `${days}d ago`;
 }
 
+function formatNum(n) {
+  if (n == null) return '0';
+  n = Number(n);
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+
 function esc(s) {
   if (!s) return '';
   const d = document.createElement('div');
@@ -41,6 +49,21 @@ function postTitle(p) {
   return `<a href="${esc(url)}" target="_blank" rel="noopener">${title}</a>`;
 }
 
+// Toast notifications
+function showToast(msg, isError) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.className = 'toast ' + (isError ? 'toast-error' : 'toast-ok');
+  toast.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
 function renderHotPosts(posts) {
   const tbody = document.getElementById('hotBody');
   if (!posts || !posts.length) {
@@ -49,12 +72,12 @@ function renderHotPosts(posts) {
   }
   tbody.innerHTML = posts.slice(0, 20).map((p, i) => `
     <tr>
-      <td>${i + 1}</td>
+      <td class="col-rank">${i + 1}</td>
       <td class="title-cell">${postTitle(p)}</td>
       <td><span class="author">${esc(authorName(p))}</span></td>
-      <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
-      <td class="comment">${commentCount(p)}</td>
-      <td><span class="submolt-tag">${esc(submoltName(p))}</span></td>
+      <td class="upvote">${formatNum(p.upvotes ?? p.score ?? 0)}</td>
+      <td class="comment">${formatNum(commentCount(p))}</td>
+      <td class="col-submolt"><span class="submolt-tag">${esc(submoltName(p))}</span></td>
     </tr>
   `).join('');
 }
@@ -69,9 +92,9 @@ function renderNewPosts(posts) {
     <tr>
       <td class="title-cell">${postTitle(p)}</td>
       <td><span class="author">${esc(authorName(p))}</span></td>
-      <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
-      <td class="comment">${commentCount(p)}</td>
-      <td><span class="submolt-tag">${esc(submoltName(p))}</span></td>
+      <td class="upvote">${formatNum(p.upvotes ?? p.score ?? 0)}</td>
+      <td class="comment">${formatNum(commentCount(p))}</td>
+      <td class="col-submolt"><span class="submolt-tag">${esc(submoltName(p))}</span></td>
       <td class="time-ago">${timeAgo(p.createdAt || p.created_at || p.date)}</td>
     </tr>
   `).join('');
@@ -85,131 +108,135 @@ function renderRising(posts) {
   }
   tbody.innerHTML = posts.slice(0, 15).map((p, i) => `
     <tr>
-      <td>${i + 1}</td>
+      <td class="col-rank">${i + 1}</td>
       <td class="title-cell">${postTitle(p)}</td>
       <td><span class="author">${esc(authorName(p))}</span></td>
-      <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
+      <td class="upvote">${formatNum(p.upvotes ?? p.score ?? 0)}</td>
     </tr>
   `).join('');
-}
-
-function extractAgents(allPosts) {
-  const map = {};
-  allPosts.forEach(p => {
-    const name = authorName(p);
-    if (!name || name === '—') return;
-    if (!map[name]) map[name] = { name, posts: 0, upvotes: 0 };
-    map[name].posts++;
-    map[name].upvotes += (p.upvotes ?? p.score ?? 0);
-  });
-  return Object.values(map).sort((a, b) => b.upvotes - a.upvotes);
 }
 
 function renderAgents(agents) {
   const tbody = document.getElementById('agentsBody');
   if (!agents || !agents.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#555">No data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#555">No data</td></tr>';
     return;
   }
   tbody.innerHTML = agents.slice(0, 15).map((a, i) => `
     <tr>
-      <td>${i + 1}</td>
+      <td class="col-rank">${i + 1}</td>
       <td><span class="author">${esc(a.name)}</span></td>
+      <td class="upvote">${formatNum(a.karma)}</td>
+      <td>${formatNum(a.followers)}</td>
       <td>${a.posts}</td>
-      <td class="upvote">${a.upvotes}</td>
     </tr>
   `).join('');
 }
 
-function updateStats(allPosts, submolts) {
-  const agents = extractAgents(allPosts);
+function updateStats(allPosts, submolts, agents) {
   const totalUpvotes = allPosts.reduce((s, p) => s + (p.upvotes ?? p.score ?? 0), 0);
-  const topKarma = agents.length ? agents[0].upvotes : 0;
-  const topAgent = agents.length ? agents[0].name : '—';
+  const topKarma = agents && agents.length ? agents[0].karma : 0;
+  const topAgent = agents && agents.length ? agents[0].name : '—';
 
   document.getElementById('statPosts').textContent = allPosts.length + '+';
-  document.getElementById('statAgents').textContent = agents.length;
-  document.getElementById('statTopKarma').textContent = `${topKarma} (${topAgent})`;
+  document.getElementById('statAgents').textContent = agents ? agents.length : '—';
+  document.getElementById('statTopKarma').textContent = `${formatNum(topKarma)} (${topAgent})`;
   document.getElementById('statSubmolts').textContent = Array.isArray(submolts) ? submolts.length : '—';
-  document.getElementById('statUpvotes').textContent = totalUpvotes;
+  document.getElementById('statUpvotes').textContent = formatNum(totalUpvotes);
 }
 
 async function fetchJSON(url) {
-  try {
-    const r = await fetch(url);
-    const data = await r.json();
-    // Handle both array and {posts:[]} / {data:[]} responses
-    if (Array.isArray(data)) return data;
-    if (data.posts) return data.posts;
-    if (data.data) return data.data;
-    if (data.results) return data.results;
-    return data;
-  } catch (e) {
-    console.error('Fetch error:', url, e);
-    return [];
-  }
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const data = await r.json();
+  if (Array.isArray(data)) return data;
+  if (data.posts) return data.posts;
+  if (data.data) return data.data;
+  if (data.results) return data.results;
+  if (data.agents) return data.agents;
+  return data;
 }
 
+let retryCount = 0;
+
 async function loadDashboard() {
-  const [hot, newPosts, rising, top, submolts] = await Promise.all([
-    fetchJSON('/api/posts?sort=hot&limit=25'),
-    fetchJSON('/api/posts?sort=new&limit=25'),
-    fetchJSON('/api/posts?sort=rising&limit=25'),
-    fetchJSON('/api/posts?sort=top&limit=25'),
-    fetchJSON('/api/submolts'),
-  ]);
+  try {
+    const [hot, newPosts, rising, top, submolts, agents] = await Promise.all([
+      fetchJSON('/api/posts?sort=hot&limit=25'),
+      fetchJSON('/api/posts?sort=new&limit=25'),
+      fetchJSON('/api/posts?sort=rising&limit=25'),
+      fetchJSON('/api/posts?sort=top&limit=25'),
+      fetchJSON('/api/submolts'),
+      fetchJSON('/api/agents/leaderboard'),
+    ]);
 
-  renderHotPosts(hot);
-  renderNewPosts(newPosts);
-  renderRising(rising);
+    renderHotPosts(hot);
+    renderNewPosts(newPosts);
+    renderRising(rising);
 
-  // Merge all posts for agent extraction + stats
-  const seen = new Set();
-  const allPosts = [];
-  [hot, newPosts, rising, top].forEach(arr => {
-    if (!Array.isArray(arr)) return;
-    arr.forEach(p => {
-      const id = p.id || p._id || p.title;
-      if (!seen.has(id)) {
-        seen.add(id);
-        allPosts.push(p);
-      }
+    const agentList = Array.isArray(agents) ? agents : [];
+    renderAgents(agentList);
+
+    // Merge all posts for stats
+    const seen = new Set();
+    const allPosts = [];
+    [hot, newPosts, rising, top].forEach(arr => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach(p => {
+        const id = p.id || p._id || p.title;
+        if (!seen.has(id)) {
+          seen.add(id);
+          allPosts.push(p);
+        }
+      });
     });
-  });
 
-  const agents = extractAgents(allPosts);
-  renderAgents(agents);
-  updateStats(allPosts, submolts);
-
-  document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    updateStats(allPosts, submolts, agentList);
+    document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    retryCount = 0;
+  } catch (e) {
+    console.error('Dashboard load error:', e);
+    retryCount++;
+    if (retryCount <= 3) {
+      showToast(`Failed to load data, retrying (${retryCount}/3)...`, true);
+      setTimeout(loadDashboard, 5000);
+    } else {
+      showToast('Failed to load data. Will retry on next refresh cycle.', true);
+      retryCount = 0;
+    }
+  }
 }
 
 async function doSearch() {
   const q = document.getElementById('searchInput').value.trim();
   if (!q) return;
-  const results = await fetchJSON(`/api/search?q=${encodeURIComponent(q)}&limit=20`);
   const section = document.getElementById('searchResults');
   const body = document.getElementById('searchBody');
   section.classList.remove('hidden');
 
-  const arr = Array.isArray(results) ? results : [];
-  if (!arr.length) {
-    body.innerHTML = '<p style="color:#818384;padding:1rem">No results found.</p>';
-    return;
-  }
+  try {
+    const results = await fetchJSON(`/api/search?q=${encodeURIComponent(q)}&limit=20`);
+    const arr = Array.isArray(results) ? results : [];
+    if (!arr.length) {
+      body.innerHTML = '<p style="color:#818384;padding:1rem">No results found.</p>';
+      return;
+    }
 
-  body.innerHTML = `<table>
-    <thead><tr><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th>Submolt</th></tr></thead>
-    <tbody>${arr.map(p => `
-      <tr>
-        <td class="title-cell">${postTitle(p)}</td>
-        <td><span class="author">${esc(authorName(p))}</span></td>
-        <td class="upvote">${p.upvotes ?? p.score ?? 0}</td>
-        <td class="comment">${commentCount(p)}</td>
-        <td><span class="submolt-tag">${esc(submoltName(p))}</span></td>
-      </tr>
-    `).join('')}</tbody>
-  </table>`;
+    body.innerHTML = `<table>
+      <thead><tr><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th>Submolt</th></tr></thead>
+      <tbody>${arr.map(p => `
+        <tr>
+          <td class="title-cell">${postTitle(p)}</td>
+          <td><span class="author">${esc(authorName(p))}</span></td>
+          <td class="upvote">${formatNum(p.upvotes ?? p.score ?? 0)}</td>
+          <td class="comment">${formatNum(commentCount(p))}</td>
+          <td><span class="submolt-tag">${esc(submoltName(p))}</span></td>
+        </tr>
+      `).join('')}</tbody>
+    </table>`;
+  } catch (e) {
+    body.innerHTML = '<p style="color:#e01b24;padding:1rem">Search failed. Please try again.</p>';
+  }
 }
 
 function closeSearch() {

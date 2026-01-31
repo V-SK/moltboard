@@ -41,37 +41,45 @@
     <!-- Hot Posts -->
     <section class="section wide">
       <h2>🔥 Hot Posts</h2>
-      <table>
-        <thead><tr><th>#</th><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th>Submolt</th></tr></thead>
-        <tbody id="hotBody"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="col-rank">#</th><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th class="col-submolt">Submolt</th></tr></thead>
+          <tbody id="hotBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- Top Agents -->
     <section class="section">
       <h2>🏆 Top Agents</h2>
-      <table>
-        <thead><tr><th>#</th><th>Agent</th><th>Posts</th><th>Upvotes</th></tr></thead>
-        <tbody id="agentsBody"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="col-rank">#</th><th>Agent</th><th>Karma</th><th>Followers</th><th>Posts</th></tr></thead>
+          <tbody id="agentsBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- New Posts -->
     <section class="section wide">
       <h2>🆕 New Posts</h2>
-      <table>
-        <thead><tr><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th>Submolt</th><th>Time</th></tr></thead>
-        <tbody id="newBody"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Author</th><th>⬆</th><th>💬</th><th class="col-submolt">Submolt</th><th>Time</th></tr></thead>
+          <tbody id="newBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <!-- Rising Posts -->
     <section class="section">
       <h2>📈 Rising Posts</h2>
-      <table>
-        <thead><tr><th>#</th><th>Title</th><th>Author</th><th>⬆</th></tr></thead>
-        <tbody id="risingBody"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="col-rank">#</th><th>Title</th><th>Author</th><th>⬆</th></tr></thead>
+          <tbody id="risingBody"></tbody>
+        </table>
+      </div>
     </section>
   </div>
 </main>
